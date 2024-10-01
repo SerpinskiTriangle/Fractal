@@ -4,14 +4,11 @@
 #include "config.h"
 #include <stdlib.h>
 
-//1 + POINT_COUNT * (int)pow(POINT_COUNT-1, RECUTSION_COUNT)
 
 void initModlelList(){
     int addedModels = 0;
-    if (RECURSION_COUNT > 0){
-        for (int i = 0; i <RECURSION_COUNT; i++){
-            addedModels += (int)pow(POINT_COUNT-1,i);
-        }
+    for (int i = 0; i <RECURSION_COUNT; i++){
+        addedModels += (int)pow(POINT_COUNT-1,i);
     }
 
     int maxModels = 1 +//base model, given at RECURSION_COUNT = 0
@@ -27,6 +24,8 @@ struct model *makeModel(struct point points[POINT_COUNT], int edges[POINT_COUNT*
     struct model *model =(struct model*)calloc(1, sizeof(struct model));
     model->points = points;
     model->edges = edges;
+    model->done = 0;
+    return model;
 };
 
 
