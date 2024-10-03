@@ -22,7 +22,7 @@ void initModlelList(){
     globalModelList = (struct model **)calloc(maxModels, sizeof(struct model));
 }
 
-struct model *makeModel(struct point points[POINT_COUNT], int edges[POINT_COUNT*2]){
+struct model *makeModel(struct point points[POINT_COUNT], int edges[POINT_COUNT*2], unsigned int order){
     struct model *model =(struct model*)calloc(1, sizeof(struct model));
     for (int i = 0; i < POINT_COUNT; i++){
         model->points[i] = points[i];
@@ -30,6 +30,7 @@ struct model *makeModel(struct point points[POINT_COUNT], int edges[POINT_COUNT*
         model->edges[i*2 + 1] = edges[i*2 + 1];
     }
     model->done = 0;
+    model->order = 0;
     return model;
 };
 
@@ -71,7 +72,6 @@ struct model shiftModel(struct model *model, double x, double y){
 
 
 void drawModel(struct model model){
-    SDL_SetRenderDrawColor(renderer, 50,50,50,0);
     for (int i = 0; i < POINT_COUNT*2; i++){
         SDL_RenderDrawLine(renderer, 
         model.points[model.edges[i+0]].x, 
@@ -79,7 +79,6 @@ void drawModel(struct model model){
         model.points[model.edges[i+1]].x, 
         model.points[model.edges[i+1]].y);
     }
-    SDL_SetRenderDrawColor(renderer, 255,255,255,255);
     for (int i = 0; i < POINT_COUNT; i++){
         SDL_RenderDrawPointF(renderer, model.points[i].x, model.points[i].y);
     }
@@ -90,16 +89,17 @@ void drawModel(struct model model){
  
 int main(){
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer(800, 800, 0,&window,&renderer);
+    SDL_CreateWindowAndRenderer(windowHeight, windowWidth, 0,&window,&renderer);
 
     SDL_SetRenderDrawColor(renderer,0,0,0,255);
     SDL_RenderClear(renderer);
 
     initModlelList();
     
-    struct model *principleModel = makeModel(principleModelPoints, principleModelEdges);
+    struct model *principleModel = makeModel(principleModelPoints, principleModelEdges, 0);
     globalModelList[0] = principleModel;
-    shiftModel(globalModelList[0], 350, 350);
+    scaleModel(globalModelList[0], globalScale, 0);
+    shiftModel(globalModelList[0], globalShiftX, globalShiftY);
     modelCount++;
 
     for (unsigned int recursionLevel = 0; recursionLevel <= RECURSION_COUNT; recursionLevel++){
@@ -115,13 +115,13 @@ int main(){
                     continue;
                 }
 
-                struct model *newModel = makeModel(principleModelPoints, principleModelEdges);
+                struct model *newModel = makeModel(principleModelPoints, principleModelEdges, recursionLevel);
 
-                if (recursionLevel % 2){
+                if (recursionLevel % 2 == 0){
                     rotate180(newModel, currentWorkingPointIndex);
                 }
 
-                scaleModel(newModel, 1/(double)(recursionLevel+1), currentWorkingPointIndex);
+                scaleModel(newModel, (1/pow(2, recursionLevel+1))*globalScale, currentWorkingPointIndex);//change scale function here
 
                 shiftModel(newModel, 
                 globalModelList[currentWorkingModelIndex]->points[currentWorkingPointIndex].x - newModel->points[currentWorkingPointIndex].x, 
@@ -154,6 +154,9 @@ int main(){
 
 
         for (int i = 0; i < modelCount; i++){
+            srand(i + 5);
+            double o = fabs(rand()/(double)RAND_MAX);
+            SDL_SetRenderDrawColor(renderer, (int)(255 - i* 20),(int)(255 * 0),(int)(255 + i*20),255);
             drawModel(*(globalModelList[i]));
         }
         
