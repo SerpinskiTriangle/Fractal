@@ -1,7 +1,9 @@
+#include <math.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include "../include/SDL.h"
 #include "config.h"
+#include "structs.h"
 #include <stdlib.h>
 
 
@@ -17,16 +19,43 @@ void initModlelList(){
     printf("%d models to be rendered\n", maxModels);
     //most epic calloc call ever?!1??!1!!
     //segfault count:
-    models = (struct model *)calloc(maxModels, sizeof(struct model));
+    globalModelList = (struct model **)calloc(maxModels, sizeof(struct model));
 }
 
 struct model *makeModel(struct point points[POINT_COUNT], int edges[POINT_COUNT*2]){
     struct model *model =(struct model*)calloc(1, sizeof(struct model));
-    model->points = points;
-    model->edges = edges;
+    for (int i = 0; i < POINT_COUNT; i++){
+        model->points[i] = points[i];
+        model->edges[i*2] = edges[i*2];
+        model->edges[i*2 + 1] = edges[i*2 + 1];
+    }
     model->done = 0;
     return model;
 };
+
+struct model shiftRotateScale(struct model model, unsigned int index, double scale){
+    struct point normalizeVector = model.points[index];
+    for (int i = 0; i < POINT_COUNT; i++){
+        model.points[i].x -= normalizeVector.x;
+        model.points[i].x *= -scale;
+        model.points[i].x += normalizeVector.x;
+
+        model.points[i].y -= normalizeVector.y;
+        model.points[i].y *= -scale;
+        model.points[i].y += normalizeVector.y;
+    }
+    return model;
+}
+
+struct model shiftModel(struct model model, double x, double y){
+    for (int i = 0; i < POINT_COUNT; i++){
+        model.points[i].x += x;
+        model.points[i].y += y;
+    }
+    return model;
+}
+
+
 
 
 void drawModel(struct model model){
@@ -42,6 +71,7 @@ void drawModel(struct model model){
     for (int i = 0; i < POINT_COUNT; i++){
         SDL_RenderDrawPointF(renderer, model.points[i].x, model.points[i].y);
     }
+    printf("model drawn at %e,%e, 2%e, 2%e\r", model.points->x,model.points->y,model.points[1].x,model.points[1].y);
 }
 
 int main(){
@@ -53,7 +83,10 @@ int main(){
 
     initModlelList();
     
-    struct model *model1 = makeModel(modelPoints, modelEdges);
+    struct model *principleModel = makeModel(principleModelPoints, principleModelEdges);
+    globalModelList[0] = principleModel;
+    modelCount++;
+
 
     while (running) {
         while (SDL_PollEvent(&event)){
@@ -62,18 +95,34 @@ int main(){
                 break;
             }
         }
+        
 
         SDL_SetRenderDrawColor(renderer,0,0,0,255);
         SDL_RenderClear(renderer);
 
-        drawModel(*model1);
+        drawModel(**globalModelList);
+        drawModel(shiftModel(**globalModelList,50,50));
 
+        for (int i = 0; i < modelCount; i++){
+            drawModel(*(globalModelList[i]));
+        }
+        
 
         SDL_RenderPresent(renderer);
 
-        
-
     }
-    free(models);
+
+    printf("\n");
+    printf("model drawn at %e,%e, 2%e, 2%e\r",globalModelList[0]->points->x,globalModelList[0]->points->y,globalModelList[0]->points[2].x,globalModelList[0]->points[2].y);
+
+    printf("/nmodels:%d", modelCount);
+    for (int i = 0; i < modelCount; i++){
+        free(globalModelList[i]);
+    }
+
+    free(globalModelList);
+
+    printf("\n");
+
     return 0;
 }
