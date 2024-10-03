@@ -1,0 +1,4 @@
+### HOW TO
+just run ```build.sh```
+and then ```./a.out```
+the model prediction count is wrong but i dont want to fix it and it works

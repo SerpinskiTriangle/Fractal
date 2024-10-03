@@ -1,7 +1,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include "../include/SDL.h"
+#include "include/SDL.h"
 #include "config.h"
 #include "structs.h"
 #include <stdlib.h>

@@ -1,6 +1,6 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
-    #include "../include/SDL.h"
+    #include "include/SDL.h"
 
     struct model **globalModelList; 
     unsigned int modelCount = 0;
