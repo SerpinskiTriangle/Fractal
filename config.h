@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG h
     #define POINT_COUNT 4     //change to however many "point" structs are in modelPoints
-    #define RECURSION_COUNT 3 //levels of recursion
+    #define RECURSION_COUNT 2 //levels of recursion
 
     #include "structs.h"
     struct point{

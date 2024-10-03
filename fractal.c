@@ -33,29 +33,41 @@ struct model *makeModel(struct point points[POINT_COUNT], int edges[POINT_COUNT*
     return model;
 };
 
-struct model shiftRotateScale(struct model model, unsigned int index, double scale){
-    struct point normalizeVector = model.points[index];
+struct model rotate180(struct model *model, unsigned int index){
+    struct point normalizeVector = model->points[index];
     for (int i = 0; i < POINT_COUNT; i++){
-        model.points[i].x -= normalizeVector.x;
-        model.points[i].x *= -scale;
-        model.points[i].x += normalizeVector.x;
+        model->points[i].x -= normalizeVector.x;
+        model->points[i].x *= -1;
+        model->points[i].x += normalizeVector.x;
 
-        model.points[i].y -= normalizeVector.y;
-        model.points[i].y *= -scale;
-        model.points[i].y += normalizeVector.y;
+        model->points[i].y -= normalizeVector.y;
+        model->points[i].y *= -1;
+        model->points[i].y += normalizeVector.y;
     }
-    return model;
+    return *model;
 }
 
-struct model shiftModel(struct model model, double x, double y){
+struct model scaleModel(struct model *model, double scale, unsigned int index){
+    struct point normalizeVector = model->points[index];
     for (int i = 0; i < POINT_COUNT; i++){
-        model.points[i].x += x;
-        model.points[i].y += y;
+        model->points[i].x -= normalizeVector.x;
+        model->points[i].x *= scale;
+        model->points[i].x += normalizeVector.x;
+
+        model->points[i].y -= normalizeVector.y;
+        model->points[i].y *= scale;
+        model->points[i].y += normalizeVector.y;
     }
-    return model;
+    return *model;
 }
 
-
+struct model shiftModel(struct model *model, double x, double y){
+    for (int i = 0; i < POINT_COUNT; i++){
+        model->points[i].x += x;
+        model->points[i].y += y;
+    }
+    return *model;
+}
 
 
 void drawModel(struct model model){
@@ -71,12 +83,14 @@ void drawModel(struct model model){
     for (int i = 0; i < POINT_COUNT; i++){
         SDL_RenderDrawPointF(renderer, model.points[i].x, model.points[i].y);
     }
-    printf("model drawn at %e,%e, 2%e, 2%e\r", model.points->x,model.points->y,model.points[1].x,model.points[1].y);
+    //printf("model drawn at %e,%e, 2%e, 2%e\r", model.points->x,model.points->y,model.points[1].x,model.points[1].y);
 }
 
+
+ 
 int main(){
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer(600, 600, 0,&window,&renderer);
+    SDL_CreateWindowAndRenderer(800, 800, 0,&window,&renderer);
 
     SDL_SetRenderDrawColor(renderer,0,0,0,255);
     SDL_RenderClear(renderer);
@@ -85,7 +99,45 @@ int main(){
     
     struct model *principleModel = makeModel(principleModelPoints, principleModelEdges);
     globalModelList[0] = principleModel;
+    shiftModel(globalModelList[0], 350, 350);
     modelCount++;
+
+    for (unsigned int recursionLevel = 0; recursionLevel <= RECURSION_COUNT; recursionLevel++){
+        unsigned int pendingModelCount = 0;
+
+        for (unsigned int currentWorkingModelIndex = 0; currentWorkingModelIndex < modelCount; currentWorkingModelIndex++){
+            if (globalModelList[currentWorkingModelIndex]->done){
+                continue;
+            }
+
+            for (unsigned int currentWorkingPointIndex = 0; currentWorkingPointIndex < POINT_COUNT; currentWorkingPointIndex++){
+                if (globalModelList[currentWorkingModelIndex]->points[currentWorkingPointIndex].done){
+                    continue;
+                }
+
+                struct model *newModel = makeModel(principleModelPoints, principleModelEdges);
+
+                if (recursionLevel % 2){
+                    rotate180(newModel, currentWorkingPointIndex);
+                }
+
+                scaleModel(newModel, 1/(double)(recursionLevel+1), currentWorkingPointIndex);
+
+                shiftModel(newModel, 
+                globalModelList[currentWorkingModelIndex]->points[currentWorkingPointIndex].x - newModel->points[currentWorkingPointIndex].x, 
+                globalModelList[currentWorkingModelIndex]->points[currentWorkingPointIndex].y - newModel->points[currentWorkingPointIndex].y);
+
+                newModel->points[currentWorkingPointIndex].done = 1;
+
+                globalModelList[modelCount + pendingModelCount] = newModel;
+
+                pendingModelCount++;
+
+                globalModelList[currentWorkingModelIndex]->points[currentWorkingPointIndex].done = 1;
+            }
+        }
+        modelCount += pendingModelCount;
+    }
 
 
     while (running) {
@@ -100,8 +152,6 @@ int main(){
         SDL_SetRenderDrawColor(renderer,0,0,0,255);
         SDL_RenderClear(renderer);
 
-        drawModel(**globalModelList);
-        drawModel(shiftModel(**globalModelList,50,50));
 
         for (int i = 0; i < modelCount; i++){
             drawModel(*(globalModelList[i]));
@@ -109,17 +159,16 @@ int main(){
         
 
         SDL_RenderPresent(renderer);
-
+        SDL_Delay(16);
     }
 
     printf("\n");
     printf("model drawn at %e,%e, 2%e, 2%e\r",globalModelList[0]->points->x,globalModelList[0]->points->y,globalModelList[0]->points[2].x,globalModelList[0]->points[2].y);
+    printf("\nmodels:%d", modelCount);
 
-    printf("/nmodels:%d", modelCount);
     for (int i = 0; i < modelCount; i++){
         free(globalModelList[i]);
     }
-
     free(globalModelList);
 
     printf("\n");
