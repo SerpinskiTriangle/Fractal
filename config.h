@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG h
     #define POINT_COUNT 8     //change to however many "point" structs are in modelPoints
-    #define RECURSION_COUNT 4 //levels of recursion
+    #define RECURSION_COUNT 6 //levels of recursion
 
     #include "structs.h"
     struct point{
@@ -17,13 +17,13 @@
         unsigned int order;
     };
     
-    double globalScale = 4;
+    double globalScale = 6;
 
-    const unsigned int windowHeight = 900;
-    const unsigned int windowWidth =  600;
+    const unsigned int windowHeight = 800;
+    const unsigned int windowWidth =  800;
 
-    int globalShiftX = windowHeight/2 -60;//can be manually set if you so wish
-    int globalShiftY = windowWidth/2  +60;
+    int globalShiftX = windowHeight/2 -100;//can be manually set if you so wish
+    int globalShiftY = windowWidth/2  +80;
 
     //use done to exclude vertices from recusing
     struct point principleModelPoints[POINT_COUNT] = {

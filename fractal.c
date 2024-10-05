@@ -1,6 +1,5 @@
 #include <math.h>
 #include <stdio.h>
-#include <sys/types.h>
 #include "include/SDL.h"
 #include "config.h"
 #include "structs.h"
@@ -89,7 +88,7 @@ void drawModel(struct model model){
  
 int main(){
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer(windowHeight, windowWidth, 0,&window,&renderer);
+    SDL_CreateWindowAndRenderer(windowWidth, windowHeight, 0,&window,&renderer);
 
     SDL_SetRenderDrawColor(renderer,0,0,0,255);
     SDL_RenderClear(renderer);
